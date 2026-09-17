@@ -1,0 +1,15 @@
+# Local Codex state, secrets, and generated backups
+.codex/
+*.secret
+*.bak
+*.backup
+config.local.toml
+models.local.json
+
+# Python cache from the local MCP/smoke fixtures
+__pycache__/
+*.py[cod]
+
+# Editor/OS files
+.DS_Store
+Thumbs.db

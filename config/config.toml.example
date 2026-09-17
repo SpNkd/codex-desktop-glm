@@ -1,0 +1,14 @@
+# Copy the values below to %USERPROFILE%\.codex\config.toml, or run setup.ps1.
+# Keep the key out of this file. Set a user-level ZAI_API_KEY instead.
+
+model = "glm-5.3"
+model_provider = "ZAI"
+model_reasoning_effort = "max"
+model_catalog_json = "C:/Users/you/.codex/codex-desktop-glm/models.json"
+
+[model_providers.ZAI]
+name = "Z.ai GLM Coding Plan"
+base_url = "https://api.z.ai/api/v1"
+env_key = "ZAI_API_KEY"
+wire_api = "responses"
+supports_websockets = false

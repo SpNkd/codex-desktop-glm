@@ -1,0 +1,40 @@
+name: Validate bundle
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell scripts
+        run: |
+          $errors = @()
+          Get-ChildItem -Path . -Filter '*.ps1' -File | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -gt 0) { $errors += $_.Name + ': ' + (($parseErrors | ForEach-Object Message) -join '; ') }
+          }
+          if ($errors.Count -gt 0) { $errors | Write-Error; exit 1 }
+      - name: Validate JSON catalog and fixture
+        run: |
+          Get-Content config/models.json.example -Raw | ConvertFrom-Json | Out-Null
+          python -m py_compile tests/mcp/echo_server.py tests/smoke/calculator.py tests/smoke/test_calculator.py
+      - name: Run fixture tests
+        run: |
+          $baseline = Start-Process -FilePath python -ArgumentList @('-m', 'unittest', 'discover', '-s', 'tests/smoke', '-p', 'test_*.py', '-v') -Wait -PassThru -NoNewWindow
+          if ($baseline.ExitCode -eq 0) { throw 'The deliberately buggy calculator fixture unexpectedly passed.' }
+          Write-Host 'Expected baseline failure observed; Codex Desktop should fix add() and rerun.'
+          exit 0
+      - name: Verify no adapter is shipped
+        run: |
+          if (Test-Path adapter) { throw 'Direct mode must not ship an adapter directory.' }
